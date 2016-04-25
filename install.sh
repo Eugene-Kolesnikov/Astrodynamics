@@ -1,1 +1,1 @@
-clang++ -o run main.cpp -lglfw3 -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
+nvcc -o run main.cu NBodySimulation.cu Registry.cpp -lglfw3 -Xlinker -framework,Cocoa -Xlinker -framework,OpenGL -Xlinker -framework,IOKit -Xlinker -framework,CoreVideo
