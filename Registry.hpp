@@ -2,6 +2,7 @@
 #define Registry_h
 
 #define __DEBUG__
+#define GLFW_INCLUDE_GLCOREARB
 
 #include <glm/glm.hpp>
 
@@ -15,5 +16,7 @@ public:
     static int width;
     static int height;
 };
+
+char* loadFile(const char *filename);
 
 #endif

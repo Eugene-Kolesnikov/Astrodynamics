@@ -1,6 +1,8 @@
 #include "NBodySimulation.hpp"
 #include <glm/gtc/random.hpp>
-#include <GLFW/glfw3.h>
+#include <iostream>
+
+#define N 5
 
 NBodySimulation::NBodySimulation()
 {
@@ -9,47 +11,86 @@ NBodySimulation::NBodySimulation()
 
 NBodySimulation::~NBodySimulation()
 {
-
+    delete N_Bodies;
 }
 
 void NBodySimulation::init()
 {
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glClearColor(.0f, .0f, .0f, 1.0f);
+    //glEnable(GL_DEPTH_TEST);
+    //glDepthFunc(GL_LEQUAL);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    initNBodyPositions();
+
+    // Create buffer of verticies
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	// create vertex buffers and register with CUDA
+	glGenBuffers(1, &posBodiesBuffer);
+    glBindVertexArray(0);
+
+    glShaderV = glCreateShader(GL_VERTEX_SHADER);
+	glShaderF = glCreateShader(GL_FRAGMENT_SHADER);
+	const GLchar* vShaderSource = loadFile("nbody.vert.glsl");
+	const GLchar* fShaderSource = loadFile("nbody.frag.glsl");
+	glShaderSource(glShaderV, 1, &vShaderSource, NULL);
+	glShaderSource(glShaderF, 1, &fShaderSource, NULL);
+	delete [] vShaderSource;
+	delete [] fShaderSource;
+	glCompileShader(glShaderV);
+	glCompileShader(glShaderF);
+	glProgram = glCreateProgram();
+	glAttachShader(glProgram, glShaderV);
+	glAttachShader(glProgram, glShaderF);
+	glLinkProgram(glProgram);
 }
 
 void NBodySimulation::render()
 {
-    /*glm::mat4 Projection = glm::perspective(45.5f, (float)Registry::width / Registry::height, 0.1f, 3000.0f);
-    glm::mat4 RotationPitch = glm::rotate(glm::mat4(1.0f), -Registry::pitch, glm::vec3(1,0,0));
-    glm::mat4 RotationYaw = glm::rotate(glm::mat4(1.0f), -Registry::yaw, glm::vec3(0,1,0));
-    glm::mat4 Translate = glm::translate(glm::mat4(1.0f),Registry::cameraPos);
-    glm::mat4 PV = Projection * RotationPitch * RotationYaw * Translate;*/
-    float ratio = Registry::width / (float) Registry::height;
-    glViewport(0, 0, Registry::width, Registry::height);
     glClear(GL_COLOR_BUFFER_BIT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glRotatef((float) glfwGetTime() * 50.f, 0.f, 0.f, 1.f);
-    glBegin(GL_TRIANGLES);
-    glColor3f(1.f, 0.f, 0.f);
-    glVertex3f(-0.6f, -0.4f, 0.f);
-    glColor3f(0.f, 1.f, 0.f);
-    glVertex3f(0.6f, -0.4f, 0.f);
-    glColor3f(0.f, 0.f, 1.f);
-    glVertex3f(0.f, 0.6f, 0.f);
-    glEnd();
+
+    glm::mat4 Projection = glm::perspective(45.5f, (float)Registry::width / Registry::height, 0.1f, 100.0f);
+    glm::mat4 PV = Projection * glm::lookAt(Registry::cameraPos, glm::vec3(0,0,0), glm::vec3(-1/sqrt(2.0f),0,1/sqrt(2.0f)));
+
+    glUseProgram(glProgram);
+
+	GLint PVM = glGetUniformLocation(glProgram, "PVM");
+	glUniformMatrix4fv(PVM, 1, GL_FALSE, glm::value_ptr(PV));
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, posBodiesBuffer);
+
+    glBufferData(GL_ARRAY_BUFFER, N * sizeof(glm::vec3), N_Bodies, GL_STATIC_DRAW);
+    GLuint pos = glGetAttribLocation(glProgram, "pos");
+    glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(pos);
+
+    glPointSize(7);
+    glDrawArrays(GL_POINTS, 0, N);
+    glFlush();
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 void NBodySimulation::initNBodyPositions()
 {
-    /* glm::vec4(glm::ballRand(1.0f), 1);
-        Generate a random 3D vector which coordinates are regulary distributed within the volume of a ball of a given radius.
-        (http://glm.g-truc.net/0.9.7/glm-0.9.7.pdf) */
+    N_Bodies = new glm::vec3[N];
+    for(int i = 0; i < N; ++i) {
+        N_Bodies[i] = glm::ballRand(1.0f);
+    }
 }
+
+/*void computeCUDA()
+{
+    // update heightmap values in vertex buffer
+	checkCudaErrors(cudaGraphicsMapResources(1, &cuda_heightVB_resource, 0));
+	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&g_hptr, &num_bytes, cuda_heightVB_resource));
+	cudaUpdateHeightmapKernel(g_hptr, d_ht, meshSize, meshSize);
+	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_heightVB_resource, 0));
+
+	cudaDeviceSynchronize();
+}*/

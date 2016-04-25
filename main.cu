@@ -26,10 +26,10 @@ int main(void)
 
     glfwSetErrorCallback(error_callback);
 
-    /*glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window = glfwCreateWindow(1024, 1024, "N-body simulation", NULL, NULL);
     if(!window) {
@@ -82,13 +82,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         return;
 
     glm::vec3 e(sin(Registry::yaw) * cos(Registry::pitch), sin(Registry::yaw) * sin(Registry::pitch), cos(Registry::yaw));
-    e = glm::normalize(e)*20.0f;
+    e = glm::normalize(e)*1.0f;
     switch (key) {
         case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, GL_TRUE); break;
         case GLFW_KEY_W: Registry::cameraPos += e; break;
         case GLFW_KEY_S: Registry::cameraPos -= e; break;
-        case GLFW_KEY_A:
-        case GLFW_KEY_F:
+        case GLFW_KEY_A: // move left along the sphere
+        case GLFW_KEY_D: // move right along the sphere
+        case GLFW_KEY_Q: // decrease Radius
+        case GLFW_KEY_E:  // increase Radius
         default:
             break;
     }
