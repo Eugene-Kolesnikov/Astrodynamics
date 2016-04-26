@@ -2,7 +2,7 @@
 #include <glm/gtc/random.hpp>
 #include <iostream>
 
-#define N 5
+#define N 1024
 
 NBodySimulation::NBodySimulation()
 {
@@ -52,7 +52,9 @@ void NBodySimulation::render()
     glClear(GL_COLOR_BUFFER_BIT);
 
     glm::mat4 Projection = glm::perspective(45.5f, (float)Registry::width / Registry::height, 0.1f, 100.0f);
-    glm::mat4 PV = Projection * glm::lookAt(Registry::cameraPos, glm::vec3(0,0,0), glm::vec3(-1/sqrt(2.0f),0,1/sqrt(2.0f)));
+    glm::mat4 PV = Projection * glm::lookAt(sphericalToCartesian(Registry::cameraPos),
+                                            Registry::centerOfMass,
+                                            Registry::upVector);
 
     glUseProgram(glProgram);
 

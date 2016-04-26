@@ -1,9 +1,11 @@
 #include "Registry.hpp"
 
 glm::vec2 Registry::pMouse = glm::vec2(0.0f, 0.0f);
-glm::vec3 Registry::cameraPos = glm::vec3(0.0f, 1.5f, 0.0f);
-float Registry::pitch = 0.0;
-float Registry::yaw = M_PI_2;
+
+glm::vec3 Registry::cameraPos = glm::vec3(1.5f, M_PI_2, 0.0f); // in spherical coordinates (r, theta, phi)
+glm::vec3 Registry::centerOfMass = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 Registry::upVector = glm::vec3(0.0f, 0.0f, 1.0f);
+
 int Registry::width = 0;
 int Registry::height = 0;
 
@@ -25,4 +27,13 @@ char* loadFile(const char *filename) {
     data[len] = 0;
     ifs.close();
     return data;
+}
+
+glm::vec3 sphericalToCartesian(glm::vec3 vec)
+{
+    return glm::vec3(
+        vec.x * sin(vec.y) * cos(vec.z),
+        vec.x * sin(vec.y) * sin(vec.z),
+        vec.x * cos(vec.y)
+    );
 }

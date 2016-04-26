@@ -5,6 +5,9 @@
 #include "NBodySimulation.hpp"
 #include "Registry.hpp"
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 void error_callback(int error, const char* description);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
@@ -38,8 +41,8 @@ int main(void)
     }
 
     glfwSetKeyCallback(window, key_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetCursorPosCallback(window, cursor_position_callback);
+    //glfwSetMouseButtonCallback(window, mouse_button_callback);
+    //glfwSetCursorPosCallback(window, cursor_position_callback);
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
@@ -81,52 +84,32 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (action != GLFW_PRESS && action != GLFW_REPEAT)
         return;
 
-    glm::vec3 e(sin(Registry::yaw) * cos(Registry::pitch), sin(Registry::yaw) * sin(Registry::pitch), cos(Registry::yaw));
-    e = glm::normalize(e)*1.0f;
+    float eps = 5e-2f;
+
+    glm::vec3 prevCameraPos = Registry::cameraPos;
+
     switch (key) {
         case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, GL_TRUE); break;
-        case GLFW_KEY_W: Registry::cameraPos += e; break;
-        case GLFW_KEY_S: Registry::cameraPos -= e; break;
+        case GLFW_KEY_W: // move up along the sphere
+            Registry::cameraPos.y = fmod(Registry::cameraPos.y - eps, 2 * M_PI);
+            break;
+        case GLFW_KEY_S: // move down along the sphere
+            Registry::cameraPos.y = fmod(Registry::cameraPos.y + eps, 2 * M_PI);
+            break;
         case GLFW_KEY_A: // move left along the sphere
+            Registry::cameraPos.z = fmod(Registry::cameraPos.z - eps, 2 * M_PI);
+            break;
         case GLFW_KEY_D: // move right along the sphere
-        case GLFW_KEY_Q: // decrease Radius
-        case GLFW_KEY_E:  // increase Radius
+            Registry::cameraPos.z = fmod(Registry::cameraPos.z + eps, 2 * M_PI);
+            break;
+        case GLFW_KEY_Q: Registry::cameraPos.x -= eps; break; // decrease Radius
+        case GLFW_KEY_E: Registry::cameraPos.x += eps; break; // increase Radius
         default:
             break;
     }
+
+
 #ifdef __DEBUG__
-    printf("%f %f %f\n", Registry::cameraPos.x, Registry::cameraPos.y, Registry::cameraPos.z);
+    printf("cameraPos: %f %f %f\n", Registry::cameraPos.x, Registry::cameraPos.y, Registry::cameraPos.z);
 #endif
-}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    if (button != GLFW_MOUSE_BUTTON_LEFT)
-        return;
-
-    if(action == GLFW_PRESS) {
-        cursor = true;
-        glfwGetCursorPos(window, &cursorX, &cursorY);
-    } else {
-        cursor = false;
-    }
-}
-
-float clamp(float x, float a, float b)
-{
-    if(a > x)
-        return a;
-    if(b < x)
-        return b;
-    return x;
-}
-
-void cursor_position_callback(GLFWwindow* window, double x, double y)
-{
-    if(cursor) {
-        Registry::pitch = clamp(Registry::pitch - (y - cursorY) * 0.01f, - M_PI_2 + 1e-4f, M_PI_2 - 1e-4f);
-        Registry::yaw -= (x - cursorX) * 0.01f;
-        cursorX = x;
-        cursorY = y;
-    }
 }
