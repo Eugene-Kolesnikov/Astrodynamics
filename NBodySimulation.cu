@@ -52,10 +52,9 @@ void NBodySimulation::render()
     glClear(GL_COLOR_BUFFER_BIT);
 
     glm::mat4 Projection = glm::perspective(45.5f, (float)Registry::width / Registry::height, 0.1f, 100.0f);
-    glm::mat4 PV = Projection * glm::lookAt(sphericalToCartesian(Registry::cameraPos),
+    glm::mat4 PV = Projection * glm::lookAt(Registry::centerOfMass + sphericalToCartesian(Registry::cameraPos),
                                             Registry::centerOfMass,
                                             Registry::upVector);
-
     glUseProgram(glProgram);
 
 	GLint PVM = glGetUniformLocation(glProgram, "PVM");

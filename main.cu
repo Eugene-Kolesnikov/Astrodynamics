@@ -104,6 +104,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             break;
         case GLFW_KEY_Q: Registry::cameraPos.x -= eps; break; // decrease Radius
         case GLFW_KEY_E: Registry::cameraPos.x += eps; break; // increase Radius
+        #ifdef __DEBUG__
+            case GLFW_KEY_T: changeCenterOfMass(glm::vec3(0.0f,0.0f,0.0f));
+        #endif
         default:
             break;
     }

@@ -37,3 +37,21 @@ glm::vec3 sphericalToCartesian(glm::vec3 vec)
         vec.x * cos(vec.y)
     );
 }
+
+glm::vec3 cartesianToSpherical(glm::vec3 vec)
+{
+    float r = sqrt(pow(vec.x,2) + pow(vec.y,2) + pow(vec.z,2));
+    return glm::vec3(
+        r,
+        acos(vec.z / r),
+        atan(vec.y / vec.x)
+    );
+}
+
+void changeCenterOfMass(glm::vec3 center)
+{
+    glm::vec3 r0 = sphericalToCartesian(Registry::cameraPos);
+    glm::vec3 r1 = r0 - (center - Registry::centerOfMass);
+    Registry::cameraPos = cartesianToSpherical(r1);
+    Registry::centerOfMass = center;
+}
