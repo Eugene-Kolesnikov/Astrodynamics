@@ -1,7 +1,7 @@
 #ifndef Registry_h
 #define Registry_h
 
-#define __DEBUG__
+//#define __DEBUG__
 #define GLFW_INCLUDE_GLCOREARB
 
 #include <glm/glm.hpp>

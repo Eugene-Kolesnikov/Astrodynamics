@@ -1,6 +1,7 @@
 #include "NBodySimulation.hpp"
 #include <glm/gtc/random.hpp>
 #include <iostream>
+#include <cmath>
 
 #define N 1024
 
@@ -63,9 +64,9 @@ void NBodySimulation::render()
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, posBodiesBuffer);
 
-    glBufferData(GL_ARRAY_BUFFER, N * sizeof(glm::vec3), N_Bodies, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, N * sizeof(glm::vec4), N_Bodies, GL_STATIC_DRAW);
     GLuint pos = glGetAttribLocation(glProgram, "pos");
-    glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glVertexAttribPointer(pos, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(pos);
 
     glPointSize(7);
@@ -79,9 +80,12 @@ void NBodySimulation::render()
 
 void NBodySimulation::initNBodyPositions()
 {
-    N_Bodies = new glm::vec3[N];
+    N_Bodies = new glm::vec4[N];
     for(int i = 0; i < N; ++i) {
-        N_Bodies[i] = glm::ballRand(1.0f);
+        glm::vec3 pos = glm::ballRand(1.0f); // power 10^12 meters
+        float mass = glm::ballRand(1.0f).x; // power 10^20 kilograms
+        // => gamma should be smaller by 20 powers
+        N_Bodies[i] = glm::vec4(pos.x, pos.y, pos.z, mass);
     }
 }
 
