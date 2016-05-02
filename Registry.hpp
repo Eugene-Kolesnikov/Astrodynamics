@@ -1,10 +1,11 @@
 #ifndef Registry_h
 #define Registry_h
 
-//#define __DEBUG__
+#define __DEBUG__
 #define GLFW_INCLUDE_GLCOREARB
 
 #include <glm/glm.hpp>
+#include <fstream>
 
 class Registry
 {
@@ -24,5 +25,14 @@ char* loadFile(const char *filename);
 glm::vec3 sphericalToCartesian(glm::vec3 vec);
 glm::vec3 cartesianToSpherical(glm::vec3 vec);
 void changeCenterOfMass(glm::vec3 center);
+
+#define checkCudaErrors(call) {										             \
+    cudaError err = call;												         \
+    if(err != cudaSuccess) {											         \
+        fprintf(stderr, "CUDA error in file '%s' in line %i: %s.\n",	         \
+            __FILE__, __LINE__, cudaGetErrorString(err));				         \
+        exit(1);														         \
+    }																	         \
+} while (0)
 
 #endif

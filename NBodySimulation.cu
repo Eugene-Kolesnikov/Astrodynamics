@@ -24,12 +24,23 @@ void NBodySimulation::init()
     //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     initNBodyPositions();
+    size_t num_bytes = N * sizeof(glm::vec4);
 
-    // Create buffer of verticies
+    // Create vertex array
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	// create vertex buffers and register with CUDA
+
+    // Create buffer of verticies
 	glGenBuffers(1, &posBodiesBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, posBodiesBuffer);
+	glBufferData(GL_ARRAY_BUFFER, num_bytes, 0, GL_DYNAMIC_DRAW);
+    checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_pos_resource, posBodiesBuffer, cudaGraphicsMapFlagsWriteDiscard));
+    checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pos_resource, 0));
+	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&dev_bodies, &num_bytes, cuda_pos_resource));
+    cu_loadInitParameters(dev_bodies, N_Bodies, num_bytes);
+    checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pos_resource, 0));
+    cudaDeviceSynchronize();
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
     glShaderV = glCreateShader(GL_VERTEX_SHADER);
@@ -64,7 +75,11 @@ void NBodySimulation::render()
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, posBodiesBuffer);
 
-    glBufferData(GL_ARRAY_BUFFER, N * sizeof(glm::vec4), N_Bodies, GL_STATIC_DRAW);
+    checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pos_resource, 0));
+    cu_shiftParameters(dev_bodies, N);
+    checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pos_resource, 0));
+	cudaDeviceSynchronize();
+
     GLuint pos = glGetAttribLocation(glProgram, "pos");
     glVertexAttribPointer(pos, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(pos);
@@ -84,18 +99,7 @@ void NBodySimulation::initNBodyPositions()
     for(int i = 0; i < N; ++i) {
         glm::vec3 pos = glm::ballRand(1.0f); // power 10^12 meters
         float mass = glm::ballRand(1.0f).x; // power 10^20 kilograms
-        // => gamma should be smaller by 20 powers
+        // => gamma should be smaller by 16 powers
         N_Bodies[i] = glm::vec4(pos.x, pos.y, pos.z, mass);
     }
 }
-
-/*void computeCUDA()
-{
-    // update heightmap values in vertex buffer
-	checkCudaErrors(cudaGraphicsMapResources(1, &cuda_heightVB_resource, 0));
-	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&g_hptr, &num_bytes, cuda_heightVB_resource));
-	cudaUpdateHeightmapKernel(g_hptr, d_ht, meshSize, meshSize);
-	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_heightVB_resource, 0));
-
-	cudaDeviceSynchronize();
-}*/

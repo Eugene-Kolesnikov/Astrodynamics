@@ -117,7 +117,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             break;
     }
 
-
 #ifdef __DEBUG__
     printf("cameraPos: %f %f %f\n", Registry::cameraPos.x, Registry::cameraPos.y, Registry::cameraPos.z);
 #endif
