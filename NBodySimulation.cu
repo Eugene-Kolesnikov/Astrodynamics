@@ -63,6 +63,16 @@ void NBodySimulation::render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, posBodiesBuffer);
+
+    checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pos_resource, 0));
+    // the actual computations
+    cu_integrateSystem(dev_bodies, dev_velocities, dev_acceleration, N);
+    //cu_computeCenterOfMass(dev_bodies, dev_tmp_bodies, N);
+    checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pos_resource, 0));
+	cudaDeviceSynchronize();
+
     glm::mat4 Projection = glm::perspective(45.5f, (float)Registry::width / Registry::height, 0.0001f, 100.0f);
     glm::mat4 PV = Projection * glm::lookAt(Registry::centerOfMass + sphericalToCartesian(Registry::cameraPos),
                                             Registry::centerOfMass,
@@ -71,15 +81,6 @@ void NBodySimulation::render()
 
 	GLint PVM = glGetUniformLocation(glProgram, "PVM");
 	glUniformMatrix4fv(PVM, 1, GL_FALSE, glm::value_ptr(PV));
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, posBodiesBuffer);
-
-    checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pos_resource, 0));
-    // the actual computations
-    cu_integrateSystem(dev_bodies, dev_velocities, dev_acceleration, N);
-    checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pos_resource, 0));
-	cudaDeviceSynchronize();
 
     GLuint pos = glGetAttribLocation(glProgram, "pos");
     glVertexAttribPointer(pos, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
@@ -106,6 +107,7 @@ void NBodySimulation::initNBodyPositions()
         N_Bodies[i] = glm::vec4(pos.x, pos.y, pos.z, mass);
         velocities[i] = glm::ballRand(55.0f);
     }
+    checkCudaErrors(cudaMalloc((void**)&dev_tmp_bodies, N * sizeof(float4)));
     checkCudaErrors(cudaMalloc((void**)&dev_acceleration, N * sizeof(float3)));
     checkCudaErrors(cudaMalloc((void**)&dev_velocities, N * sizeof(float3)));
     checkCudaErrors( cudaMemcpy( dev_velocities, velocities, N * sizeof(glm::vec3), cudaMemcpyHostToDevice ) );

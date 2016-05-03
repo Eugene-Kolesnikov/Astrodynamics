@@ -41,6 +41,7 @@ private:
 private:
     glm::vec4* N_Bodies;
     float4* dev_bodies;
+    float4* dev_tmp_bodies;
     float3* dev_velocities;
     float3* dev_acceleration;
 };

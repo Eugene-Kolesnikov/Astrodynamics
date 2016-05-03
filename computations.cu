@@ -1,5 +1,6 @@
 #include "computations.h"
 #include <glm/gtc/type_ptr.hpp>
+#include <thrust/reduce.h>
 
 #define _GAMMA_ 6.67408
 #define _TAU_ 1e-4
@@ -155,4 +156,28 @@ extern "C" void cu_integrateSystem(float4* dev_bodies, float3* dev_velocities, f
     size_t threadsPerBlock = 256;
     size_t blocks = floor((N - 1.0f) / threadsPerBlock) + 1;
     LeapFrog_integrator(dev_bodies, dev_velocities, dev_acceleration, N);
+}
+
+__global__ void
+prepareCenterOfMass(float4* bodies, size_t N)
+{
+    int gtid = blockIdx.x * blockDim.x + threadIdx.x;
+    if(gtid >= N)
+        return;
+    float4 body = bodies[gtid];
+    body.x *= body.w;
+    body.y *= body.w;
+    body.z *= body.w;
+    bodies[gtid] = body;
+}
+
+extern "C" void cu_computeCenterOfMass(float4* dev_bodies, float4* dev_tmp_bodies, size_t N)
+{
+    checkCudaErrors( cudaMemcpy( dev_tmp_bodies, dev_bodies, N * sizeof(float4), cudaMemcpyDeviceToDevice ) );
+    size_t threadsPerBlock = 256;
+    size_t blocks = floor((N - 1.0f) / threadsPerBlock) + 1;
+    prepareCenterOfMass <<< blocks, threadsPerBlock >>> (dev_tmp_bodies, N);
+    //float4 zeros = {0.0f, 0.0f, 0.0f, 0.0f};
+    //float4 res = thrust::reduce(dev_tmp_bodies, dev_tmp_bodies + N, zeros, thrust::plus<float4>());
+    //Registry::centerOfMass = glm::vec3(res.x / res.w, res.y / res.w, res.z / res.w);
 }
