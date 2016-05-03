@@ -23,8 +23,6 @@ public:
 char* loadFile(const char *filename);
 
 glm::vec3 sphericalToCartesian(glm::vec3 vec);
-glm::vec3 cartesianToSpherical(glm::vec3 vec);
-void changeCenterOfMass(glm::vec3 center);
 
 #define checkCudaErrors(call) {										             \
     cudaError err = call;												         \

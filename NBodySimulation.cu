@@ -69,7 +69,7 @@ void NBodySimulation::render()
     checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pos_resource, 0));
     // the actual computations
     cu_integrateSystem(dev_bodies, dev_velocities, dev_acceleration, N);
-    //cu_computeCenterOfMass(dev_bodies, dev_tmp_bodies, N);
+    cu_computeCenterOfMass(dev_bodies, dev_tmp_bodies, N);
     checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pos_resource, 0));
 	cudaDeviceSynchronize();
 
@@ -100,12 +100,12 @@ void NBodySimulation::initNBodyPositions()
     N_Bodies = new glm::vec4[N];
     glm::vec3* velocities = new glm::vec3[N];
     for(int i = 0; i < N; ++i) {
-        glm::vec3 pos = glm::ballRand(1.0f); // power 10^12 meters
-        float mass = fabs(glm::ballRand(1.0f).x); // power 10^20 kilograms
+        glm::vec3 pos = glm::ballRand(1.0f);
+        float mass = fabs(glm::ballRand(1.0f).x);
         //float mass = 0.01f; // power 10^20 kilograms
-        // => gamma should be smaller by 16 powers
         N_Bodies[i] = glm::vec4(pos.x, pos.y, pos.z, mass);
         velocities[i] = glm::ballRand(55.0f);
+        //velocities[i] = glm::vec3(0.0f, 0.0f, 100.0f);
     }
     checkCudaErrors(cudaMalloc((void**)&dev_tmp_bodies, N * sizeof(float4)));
     checkCudaErrors(cudaMalloc((void**)&dev_acceleration, N * sizeof(float3)));
