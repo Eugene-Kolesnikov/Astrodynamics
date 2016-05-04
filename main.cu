@@ -90,7 +90,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (action != GLFW_PRESS && action != GLFW_REPEAT)
         return;
 
-    float eps = 5e-2f;
+    float eps = 50.0f;
 
     glm::vec3 prevCameraPos = Registry::cameraPos;
 

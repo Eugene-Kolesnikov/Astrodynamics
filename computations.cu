@@ -4,8 +4,8 @@
 #include <thrust/device_ptr.h>
 
 #define _GAMMA_ 6.67408
-#define _TAU_ 1e-4
-#define _EPS2_ 1e-4
+#define _TAU_ 5e-3
+#define _EPS2_ 70
 
 __device__ float4 fTf4(float f, float4 f4)
 {

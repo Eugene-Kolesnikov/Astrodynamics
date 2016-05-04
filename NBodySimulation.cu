@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cmath>
 
-#define N 1024
+#define N 11*1024
 
 NBodySimulation::NBodySimulation()
 {
@@ -73,7 +73,7 @@ void NBodySimulation::render()
     checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pos_resource, 0));
 	cudaDeviceSynchronize();
 
-    glm::mat4 Projection = glm::perspective(45.5f, (float)Registry::width / Registry::height, 0.0001f, 100.0f);
+    glm::mat4 Projection = glm::perspective(45.5f, (float)Registry::width / Registry::height, 0.0001f, 100000.0f);
     glm::mat4 PV = Projection * glm::lookAt(Registry::centerOfMass + sphericalToCartesian(Registry::cameraPos),
                                             Registry::centerOfMass,
                                             Registry::upVector);
@@ -86,7 +86,7 @@ void NBodySimulation::render()
     glVertexAttribPointer(pos, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(pos);
 
-    glPointSize(7);
+    glPointSize(4);
     glDrawArrays(GL_POINTS, 0, N);
     glFlush();
 
@@ -99,14 +99,40 @@ void NBodySimulation::initNBodyPositions()
 {
     N_Bodies = new glm::vec4[N];
     glm::vec3* velocities = new glm::vec3[N];
-    for(int i = 0; i < N; ++i) {
-        glm::vec3 pos = glm::ballRand(1.0f);
-        float mass = fabs(glm::ballRand(1.0f).x);
-        //float mass = 0.01f; // power 10^20 kilograms
-        N_Bodies[i] = glm::vec4(pos.x, pos.y, pos.z, mass);
-        velocities[i] = glm::ballRand(55.0f);
+    for(int i = 1; i < N; ++i) {
+        glm::vec3 pos = glm::ballRand(1000.0f);
+        float mass = 100 + fabs(glm::ballRand(100.0f).x);
+        //float mass = 0.01f; 
+        glm::vec3 vel = glm::ballRand(50.0f);
+        if(sqrtf(pos.y*pos.y+pos.z*pos.z) < 10) {
+            N_Bodies[i] = glm::vec4(0.0f, 5*pos.y, 5*pos.z, mass);
+            velocities[i] = glm::vec3(0.0f, -pos.z, pos.y);
+        } else if(sqrtf(pos.y*pos.y+pos.z*pos.z) < 100) {
+            N_Bodies[i] = glm::vec4(0.0f, 5*pos.y, 5*pos.z, mass);
+            velocities[i] = glm::vec3(0.0f, -pos.z, pos.y);
+        } else if(sqrtf(pos.y*pos.y+pos.z*pos.z) < 200) {
+            N_Bodies[i] = glm::vec4(0.0f, 3.4*pos.y, 3.4*pos.z, mass);
+            velocities[i] = glm::vec3(0.0f, -pos.z, pos.y);
+        } else if(sqrtf(pos.y*pos.y+pos.z*pos.z) < 300) {
+            N_Bodies[i] = glm::vec4(0.0f, 2.3*pos.y, 2.3*pos.z, mass);
+            velocities[i] = glm::vec3(0.0f, -pos.z/2, pos.y/2);
+        } else if(sqrtf(pos.y*pos.y+pos.z*pos.z) < 400) {
+            N_Bodies[i] = glm::vec4(0.0f, 1.7*pos.y, 1.7*pos.z, mass);
+            velocities[i] = glm::vec3(0.0f, -pos.z/2.2, pos.y/2.2);
+        } else if(sqrtf(pos.y*pos.y+pos.z*pos.z) < 500) {
+            N_Bodies[i] = glm::vec4(0.0f, 1.2*pos.y, 1.2*pos.z, mass);
+            velocities[i] = glm::vec3(0.0f, -pos.z/2.2, pos.y/3);
+        } else {
+            N_Bodies[i] = glm::vec4(0.0f, pos.y, pos.z, mass);
+            velocities[i] = glm::vec3(0.0f, -pos.z/5, pos.y/5);
+        }
+
         //velocities[i] = glm::vec3(0.0f, 0.0f, 100.0f);
     }
+    N_Bodies[0] = glm::vec4(0.0f,0.0f,0.0f,2000000.0f); velocities[0] = glm::vec3(0.0f,0.0f,0.0f);
+    // N_Bodies[1] = glm::vec4(0.0f,1.0f,0.0f,0.1f); velocities[1] = glm::vec3(0.0f,0.0f,1.0f);
+    // N_Bodies[2] = glm::vec4(0.0f,-1.0f,0.0f,0.001f); velocities[2] = glm::vec3(0.0f,0.0f,-1.0f);
+    // N_Bodies[3] = glm::vec4(0.0f,1.0f,1.0f,0.2f); velocities[3] = glm::vec3(0.0f,-1.0f,-0.5f);
     checkCudaErrors(cudaMalloc((void**)&dev_tmp_bodies, N * sizeof(float4)));
     checkCudaErrors(cudaMalloc((void**)&dev_acceleration, N * sizeof(float3)));
     checkCudaErrors(cudaMalloc((void**)&dev_velocities, N * sizeof(float3)));

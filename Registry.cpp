@@ -2,7 +2,7 @@
 
 glm::vec2 Registry::pMouse = glm::vec2(0.0f, 0.0f);
 
-glm::vec3 Registry::cameraPos = glm::vec3(2.5f, M_PI_2, 0.0f); // in spherical coordinates (r, theta, phi)
+glm::vec3 Registry::cameraPos = glm::vec3(1200.0f, M_PI_2, 0.0f); // in spherical coordinates (r, theta, phi)
 glm::vec3 Registry::centerOfMass = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 Registry::upVector = glm::vec3(0.0f, 0.0f, 1.0f);
 
