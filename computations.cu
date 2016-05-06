@@ -2,6 +2,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <thrust/reduce.h>
 #include <thrust/device_ptr.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_gl_interop.h>
 
 #define _GAMMA_ 6.67408
 #define _TAU_ 5e-3
@@ -185,12 +188,12 @@ struct add_float4 {
 
 extern "C" void cu_computeCenterOfMass(float4* dev_bodies, float4* dev_tmp_bodies, size_t N)
 {
-    checkCudaErrors( cudaMemcpy( dev_tmp_bodies, dev_bodies, N * sizeof(float4), cudaMemcpyDeviceToDevice ) );
+    checkCudaErrors( cudaMemcpy( dev_tmp_bodies, dev_bodies, AbstractSimulation::N * sizeof(float4), cudaMemcpyDeviceToDevice ) );
     size_t threadsPerBlock = 256;
-    size_t blocks = floor((N - 1.0f) / threadsPerBlock) + 1;
-    prepareCenterOfMass <<< blocks, threadsPerBlock >>> (dev_tmp_bodies, N);
+    size_t blocks = floor((AbstractSimulation::N - 1.0f) / threadsPerBlock) + 1;
+    prepareCenterOfMass <<< blocks, threadsPerBlock >>> (dev_tmp_bodies, AbstractSimulation::N);
     float4 zeros = {0.0f, 0.0f, 0.0f, 0.0f};
     thrust::device_ptr<float4> dp = thrust::device_pointer_cast(dev_tmp_bodies);
-    float4 res = thrust::reduce(dp, dp + N, zeros, add_float4());
-    Registry::centerOfMass = glm::vec3(res.x / res.w, res.y / res.w, res.z / res.w);
+    float4 res = thrust::reduce(dp, dp + AbstractSimulation::N, zeros, add_float4());
+    AbstractSimulation::centerOfMass = glm::vec3(res.x / res.w, res.y / res.w, res.z / res.w);
 }

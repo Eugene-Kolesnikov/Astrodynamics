@@ -1,7 +1,7 @@
 #ifndef COMPUTATIONS_H
 #define COMPUTATIONS_H
 
-#include "Registry.hpp"
+#include "abstractsimulation.hpp"
 
 extern "C" void cu_loadInitParameters(float4* dev_bodies, glm::vec4* N_Bodies, size_t memorySize);
 extern "C" void cu_initVelocities(float4* dev_bodies, float3* dev_velocities, float3* dev_acceleration, size_t N);
