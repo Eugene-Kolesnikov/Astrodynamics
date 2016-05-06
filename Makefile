@@ -6,7 +6,7 @@ OBJECTS = main.o \
 	abstractsimulation.o \
 	cpu_simulation.o \
 	gpu_simulation.o \
-	computations.o
+	gpu_computations.o
 
 all: $(OBJECTS)
 	$(NVCC) $(NVCCFLAGS) $(OBJECTS) -o astrodynamics

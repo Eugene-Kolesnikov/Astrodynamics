@@ -1,4 +1,4 @@
-#include "computations.h"
+#include "gpu_computations.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <thrust/reduce.h>
 #include <thrust/device_ptr.h>

@@ -5,7 +5,6 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
-#include "computations.h"
 
 class GPU_Simulation : public AbstractSimulation
 {

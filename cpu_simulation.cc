@@ -1,4 +1,6 @@
 #include "cpu_simulation.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 CPU_Simulation::CPU_Simulation()
 {

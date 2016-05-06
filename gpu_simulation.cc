@@ -1,4 +1,5 @@
 #include "gpu_simulation.hpp"
+#include "gpu_computations.hpp"
 #include <iostream>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
