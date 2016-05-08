@@ -5,6 +5,7 @@ NVCCFLAGS = -arch=sm_30 -O3 \
 OBJECTS = main.o \
 	abstractsimulation.o \
 	cpu_simulation.o \
+	cpu_computations.o \
 	gpu_simulation.o \
 	gpu_computations.o
 

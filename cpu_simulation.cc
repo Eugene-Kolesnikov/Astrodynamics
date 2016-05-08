@@ -1,4 +1,5 @@
 #include "cpu_simulation.hpp"
+#include "cpu_computations.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -16,6 +17,7 @@ void CPU_Simulation::init(int dimensions)
 {
     AbstractSimulation::init(dimensions);
     acceleration = new glm::vec3[AbstractSimulation::N];
+    cpu_initVelocities(bodies, velocities, acceleration);
 }
 
 void CPU_Simulation::render()
@@ -28,11 +30,11 @@ void CPU_Simulation::render()
     glBindBuffer(GL_ARRAY_BUFFER, posBodiesBuffer);
 
     // actual calculations
-    integrateSystem(bodies, velocities, acceleration, AbstractSimulation::N);
-    computeCenterOfMass(bodies, AbstractSimulation::N);
+    cpu_integrateSystem(bodies, velocities, acceleration);
+    cpu_computeCenterOfMass(bodies);
 
     // send data to the GPU
-    glBufferData(GL_ARRAY_BUFFER, num_bytes, bodies, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, num_bytes, bodies, GL_STATIC_DRAW);
 
     glm::mat4 Projection = glm::perspective(45.5f, (float)AbstractSimulation::width / AbstractSimulation::height, 0.0001f, 100000.0f);
     glm::mat4 PV = Projection * glm::lookAt(AbstractSimulation::centerOfMass + sphericalToCartesian(AbstractSimulation::cameraPos),

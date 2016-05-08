@@ -11,6 +11,7 @@ GPU_Simulation::GPU_Simulation()
 
 GPU_Simulation::~GPU_Simulation()
 {
+    cudaDeviceReset();
 }
 
 void GPU_Simulation::init(int dimensions)

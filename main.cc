@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "gpu_simulation.hpp"
+#include "cpu_simulation.hpp"
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -60,6 +61,7 @@ int main(void)
 #endif
 
     AbstractSimulation* simulation = new GPU_Simulation;
+    //AbstractSimulation* simulation = new CPU_Simulation;
     simulation->init(_2D_SIMULATION_);
 
     while (!glfwWindowShouldClose(window))
@@ -72,7 +74,6 @@ int main(void)
         glfwPollEvents();
     }
 
-    cudaDeviceReset();
     return EXIT_SUCCESS;
 }
 

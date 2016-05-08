@@ -142,9 +142,9 @@ void LeapFrog_integrator(float4* dev_bodies, float3* dev_velocities, float3* dev
     updateVelocities <<< blocks, threadsPerBlock >>> (dev_velocities, dev_acceleration, N);
 }
 
-extern "C" void cu_loadInitParameters(float4 *dev_bodies, glm::vec4* N_Bodies, size_t memorySize)
+extern "C" void cu_loadInitParameters(float4 *dev_bodies, glm::vec4* bodies, size_t memorySize)
 {
-    checkCudaErrors( cudaMemcpy( dev_bodies, N_Bodies, memorySize, cudaMemcpyHostToDevice ) );
+    checkCudaErrors( cudaMemcpy( dev_bodies, bodies, memorySize, cudaMemcpyHostToDevice ) );
 }
 
 extern "C" void cu_initVelocities(float4* dev_bodies, float3* dev_velocities, float3* dev_acceleration, size_t N)
