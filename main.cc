@@ -62,6 +62,7 @@ int main(void)
 
     AbstractSimulation* simulation = new GPU_Simulation;
     //AbstractSimulation* simulation = new CPU_Simulation;
+    simulation->setPotentialFieldRendering(false);
     simulation->init(_2D_SIMULATION_);
 
     while (!glfwWindowShouldClose(window))
@@ -94,16 +95,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     switch (key) {
         case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, GL_TRUE); break;
         case GLFW_KEY_W: // move up along the sphere
-            AbstractSimulation::cameraPos.y = fmod(AbstractSimulation::cameraPos.y - eps, 2 * M_PI);
-            break;
-        case GLFW_KEY_S: // move down along the sphere
             AbstractSimulation::cameraPos.y = fmod(AbstractSimulation::cameraPos.y + eps, 2 * M_PI);
             break;
+        case GLFW_KEY_S: // move down along the sphere
+            AbstractSimulation::cameraPos.y = fmod(AbstractSimulation::cameraPos.y - eps, 2 * M_PI);
+            break;
         case GLFW_KEY_A: // move left along the sphere
-            AbstractSimulation::cameraPos.z = fmod(AbstractSimulation::cameraPos.z - eps, 2 * M_PI);
+            AbstractSimulation::cameraPos.z = fmod(AbstractSimulation::cameraPos.z + eps, 2 * M_PI);
             break;
         case GLFW_KEY_D: // move right along the sphere
-            AbstractSimulation::cameraPos.z = fmod(AbstractSimulation::cameraPos.z + eps, 2 * M_PI);
+            AbstractSimulation::cameraPos.z = fmod(AbstractSimulation::cameraPos.z - eps, 2 * M_PI);
             break;
         case GLFW_KEY_Q: AbstractSimulation::cameraPos.x -= eps; break; // decrease Radius
         case GLFW_KEY_E: AbstractSimulation::cameraPos.x += eps; break; // increase Radius

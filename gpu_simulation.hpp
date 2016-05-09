@@ -16,13 +16,17 @@ public:
     virtual void render();
 
 protected:
-    struct cudaGraphicsResource *cuda_pos_resource;
+    struct cudaGraphicsResource* cuda_pos_resource;
+    struct cudaGraphicsResource* cudaPotentialColorResource;
 
 protected:
     float4* dev_bodies;
     float4* dev_tmp_bodies;
     float3* dev_velocities;
     float3* dev_acceleration;
+    float3* dev_potentialColors;
+    float4* dev_potentialPos;
+    float* dev_potentialColorGray;
 };
 
 #endif

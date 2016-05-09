@@ -39,18 +39,42 @@ public:
     virtual void init(int dimensions);
     virtual void render() = 0;
 
+public:
+    void setPotentialFieldRendering(bool enable);
+
 protected: // OpenGL vertex buffers
     GLuint vao;
     GLuint posBodiesBuffer;
-    GLuint glShaderV, glShaderF;
-    GLuint glProgram;
+    GLuint potentialFieldPositionBuffer;
+    GLuint potentialFieldColorBuffer;
+    GLuint potentialFieldIndexBuffer;
 
-protected:
+protected: // shaders
+    GLuint bodiesVertexShader;
+    GLuint bodiesFragmentShader;
+    GLuint bodiesShaderProgram;
+
+    GLuint potentialVertexShader;
+    GLuint potentialFragmentShader;
+    GLuint potentialShaderProgram;
+
+private:
     void initNBodyPositions(int dimensions);
+    void createPotentialPosition_VBO(GLuint *id, int w, int h);
+    void createPotentialColor_VBO(GLuint *id, int w, int h);
+    void createPotential_IBO(GLuint *id, int w, int h);
 
 protected:
     glm::vec4* bodies; // w -- mass
     glm::vec3* velocities;
+
+protected:
+    int potential_Hx;
+    int potential_Hy;
+    glm::vec4* potentialFieldPositions;
+
+protected:
+    bool potentialFieldRendering;
 
 public:
     static unsigned int N;

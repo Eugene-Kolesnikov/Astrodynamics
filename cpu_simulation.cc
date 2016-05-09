@@ -40,12 +40,12 @@ void CPU_Simulation::render()
     glm::mat4 PV = Projection * glm::lookAt(AbstractSimulation::centerOfMass + sphericalToCartesian(AbstractSimulation::cameraPos),
                                             AbstractSimulation::centerOfMass,
                                             AbstractSimulation::upVector);
-    glUseProgram(glProgram);
+    glUseProgram(bodiesShaderProgram);
 
-	GLint PVM = glGetUniformLocation(glProgram, "PVM");
+	GLint PVM = glGetUniformLocation(bodiesShaderProgram, "PVM");
 	glUniformMatrix4fv(PVM, 1, GL_FALSE, glm::value_ptr(PV));
 
-    GLuint pos = glGetAttribLocation(glProgram, "pos");
+    GLuint pos = glGetAttribLocation(bodiesShaderProgram, "pos");
     glVertexAttribPointer(pos, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(pos);
 
