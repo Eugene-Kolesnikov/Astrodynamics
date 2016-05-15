@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "gpu_simulation.hpp"
 #include "cpu_simulation.hpp"
+#include "gpu_bh_simulation.hpp"
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -60,20 +61,28 @@ int main(void)
     printf("Supported GLSL is %s\n\n", (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
 #endif
 
-    AbstractSimulation* simulation = new GPU_Simulation;
+    //AbstractSimulation* simulation = new GPU_Simulation;
     //AbstractSimulation* simulation = new CPU_Simulation;
+    AbstractSimulation* simulation = new GPU_BarnesHut_Simulation;
+
     simulation->setPotentialFieldRendering(false);
     simulation->init(_2D_SIMULATION_);
 
+    #ifndef _DEBUG_THRUST_
     while (!glfwWindowShouldClose(window))
     {
+    #endif
         glfwGetFramebufferSize(window, &AbstractSimulation::width, &AbstractSimulation::height);
 
         simulation->render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+    #ifndef _DEBUG_THRUST_
     }
+    #else
+    getchar();
+    #endif
 
     return EXIT_SUCCESS;
 }

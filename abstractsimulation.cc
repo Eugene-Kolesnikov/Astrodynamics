@@ -57,11 +57,15 @@ void AbstractSimulation::setPotentialFieldRendering(bool enable)
 
 void AbstractSimulation::init(int dimensions)
 {
+    #ifdef _DEBUG_THRUST_
+        AbstractSimulation::N = 8;
+    #else
     if(potentialFieldRendering == true) {
         AbstractSimulation::N = 4*1024;
     } else {
         AbstractSimulation::N = 11*1024;
     }
+    #endif
 
     initNBodyPositions(_2D_SIMULATION_);
 
@@ -175,6 +179,11 @@ void AbstractSimulation::initNBodyPositions(int dimensions)
     } else {
         bodies[0] = glm::vec4(0.0f,0.0f,0.0f,2000000.0f); velocities[0] = glm::vec3(0.0f,0.0f,0.0f);
     }
+    #ifdef _DEBUG_THRUST_
+        for(int i = 0; i < AbstractSimulation::N; ++i)
+            printf("%f %f %f %f\n", bodies[i].x, bodies[i].y, bodies[i].z, bodies[i].w);
+        printf("\n");
+    #endif
 }
 
 void AbstractSimulation::createPotentialPosition_VBO(GLuint *id, int w, int h)

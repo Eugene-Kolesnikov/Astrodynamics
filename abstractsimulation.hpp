@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 
 #define __DEBUG__
+#define _DEBUG_THRUST_
 #define GLFW_INCLUDE_GLCOREARB
 
 #include <glm/glm.hpp>
@@ -29,6 +30,8 @@ glm::vec3 sphericalToCartesian(glm::vec3 vec);
 
 #define _2D_SIMULATION_ 2
 #define _3D_SIMULATION_ 3
+
+#define _UNUSED_ -2
 
 class AbstractSimulation
 {
