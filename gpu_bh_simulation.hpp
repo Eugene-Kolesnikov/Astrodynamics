@@ -28,6 +28,7 @@ protected:
     float* dev_delta; // the distance between the center of mass and the geometric center (cells)
     float3* dev_pivots; // bottom left points which represent the begining of subspaces (cells)
     int4* dev_child; // children pointers (cells)
+    int* dev_nextCell;
 
 public:
     static glm::vec3 pivot; // bottom left point which represents the begining of a main (root) space

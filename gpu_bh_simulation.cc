@@ -32,7 +32,7 @@ void GPU_BarnesHut_Simulation::init(int dimensions)
     checkCudaErrors(cudaMalloc((void**)&dev_delta, AbstractSimulation::N * sizeof(float)));
     checkCudaErrors(cudaMalloc((void**)&dev_pivots, AbstractSimulation::N * sizeof(float3)));
     checkCudaErrors(cudaMalloc((void**)&dev_child, AbstractSimulation::N * sizeof(int4)));
-    checkCudaErrors(cudaMemset(dev_child, _UNUSED_, AbstractSimulation::N * sizeof(int4)));
+    checkCudaErrors(cudaMalloc((void**)&dev_nextCell, sizeof(int)));
 
     size_t num_bytes = AbstractSimulation::N * sizeof(glm::vec4);
     size_t num_bytes_bodies_cells = 2 * AbstractSimulation::N * sizeof(glm::vec4);
@@ -74,6 +74,7 @@ void GPU_BarnesHut_Simulation::render()
                          dev_delta, // the distance between the center of mass and the geometric center (cells)
                          dev_pivots, // bottom left points which represent the begining of subspaces (cells)
                          dev_child, // children pointers (cells)
+                         dev_nextCell,
                          AbstractSimulation::N); /*/////////////////////////////////////////////////////////////////////*/
     /*//////////////////////////////////////////////////*//*//////////////////////////////////////////////////*//*//////////////////////////////////////////////////*/
     /*//////////////////////////////////////////////////*//*//////////////////////////////////////////////////*//*//////////////////////////////////////////////////*/

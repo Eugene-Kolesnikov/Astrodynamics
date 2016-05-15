@@ -13,6 +13,7 @@ extern "C" void cu_BHintegrateSystem(float4* dev_bodies_cells, // coordinates + 
                                      float* dev_delta, // the distance between the center of mass and the geometric center (cells)
                                      float3* dev_pivots, // bottom left points which represent the begining of subspaces (cells)
                                      int4* dev_child, // children pointers (cells)
+                                     int* dev_nextCell,
                                      size_t N);
 
 #endif
