@@ -52,13 +52,14 @@ struct min_max_float4 {
     }
  };
 
-__global__ void setDefaultValues(float4* dev_bodies, int4* dev_child, int* dev_nextCell, size_t N)
+__global__ void setDefaultValues(float4* dev_bodies, int4* dev_child, float* dev_l, int* dev_nextCell, size_t N)
 {
     int gtid = blockIdx.x * blockDim.x + threadIdx.x;
     if(gtid >= N)
         return;
     int4 nullLink = {_UNUSED_,_UNUSED_,_UNUSED_,_UNUSED_};
     dev_child[gtid] = nullLink;
+    dev_l[gtid] = -1.0f;
     if(gtid == 0)
         *dev_nextCell = 2*N-2; // penultimate
 }
@@ -162,20 +163,20 @@ BH_buildOctotree(float4* dev_bodies_cells, float* dev_l, float3* dev_pivots, int
                         switch(child) {
                             case 1:
                                 newPivot.x = 0.0f;
-                                newPivot.y = prevPivot.y + prevL;
+                                newPivot.y = prevPivot.y + newL;
                                 newPivot.z = prevPivot.z;
                                 break;
                             case 2:
                                 newPivot.x = 0.0f;
-                                newPivot.y = prevPivot.y + prevL;
-                                newPivot.z = prevPivot.z + prevL;
+                                newPivot.y = prevPivot.y + newL;
+                                newPivot.z = prevPivot.z + newL;
                                 break;
                             case 3:
                                 newPivot = prevPivot; break;
                             case 4:
                                 newPivot.x = 0.0f;
                                 newPivot.y = prevPivot.y;
-                                newPivot.z = prevPivot.z + prevL;
+                                newPivot.z = prevPivot.z + newL;
                                 break;
                         }
                         dev_l[newCell] = newL;
@@ -219,11 +220,15 @@ extern "C" void cu_BHintegrateSystem(float4* dev_bodies_cells, // coordinates + 
 
     threadsPerBlock = 1024;
     blocks = floor((N-1) / threadsPerBlock) + 1;
-    setDefaultValues <<< blocks, threadsPerBlock >>> (dev_bodies_cells, dev_child, dev_nextCell, N);
+    setDefaultValues <<< blocks, threadsPerBlock >>> (dev_bodies_cells, dev_child, dev_l, dev_nextCell, N);
 
     computeBoundingBox(dev_bodies_cells, dev_l, dev_pivots, N);
 
     blocks = _AVAILABLE_SMs_; // current GPU has 2 SMs
     threadsPerBlock = 1024;
     BH_buildOctotree <<< blocks, threadsPerBlock >>> (dev_bodies_cells, dev_l, dev_pivots, dev_child, dev_nextCell, N);
+
+    #ifdef __DEBUG__
+        printf("here\n");
+    #endif
 }

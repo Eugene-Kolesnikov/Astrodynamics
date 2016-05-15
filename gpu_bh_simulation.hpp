@@ -30,8 +30,24 @@ protected:
     int4* dev_child; // children pointers (cells)
     int* dev_nextCell;
 
+protected:
+    float* cpu_l;
+    glm::vec3* cpu_pivots;
+    glm::vec3* bh_lines;
+
+protected:
+    void updateLines();
+
 public:
     static glm::vec3 pivot; // bottom left point which represents the begining of a main (root) space
+
+protected: // shaders
+    GLuint BH_spaceSeparationVertexShader;
+    GLuint BH_spaceSeparationFragmentShader;
+    GLuint BH_spaceSeparationShaderProgram;
+
+protected: // OpenGL vertex buffers
+    GLuint linesBuffer;
 };
 
 #endif

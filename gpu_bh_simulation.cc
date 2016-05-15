@@ -33,6 +33,8 @@ void GPU_BarnesHut_Simulation::init(int dimensions)
     checkCudaErrors(cudaMalloc((void**)&dev_pivots, AbstractSimulation::N * sizeof(float3)));
     checkCudaErrors(cudaMalloc((void**)&dev_child, AbstractSimulation::N * sizeof(int4)));
     checkCudaErrors(cudaMalloc((void**)&dev_nextCell, sizeof(int)));
+    cpu_l = new float[AbstractSimulation::N];
+    cpu_pivots = new glm::vec3[AbstractSimulation::N];
 
     size_t num_bytes = AbstractSimulation::N * sizeof(glm::vec4);
     size_t num_bytes_bodies_cells = 2 * AbstractSimulation::N * sizeof(glm::vec4);
@@ -50,8 +52,30 @@ void GPU_BarnesHut_Simulation::init(int dimensions)
     checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pos_resource, 0));
     cudaDeviceSynchronize();
 
+    // Create a buffer of lines' positions and allocate memory
+    size_t lines_bytes = 2*AbstractSimulation::N * sizeof(glm::vec3);
+	glGenBuffers(1, &linesBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, linesBuffer);
+	glBufferData(GL_ARRAY_BUFFER, lines_bytes, 0, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    BH_spaceSeparationVertexShader = glCreateShader(GL_VERTEX_SHADER);
+    BH_spaceSeparationFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    const GLchar* vShaderSource = loadFile("./shaders/bh_spaceSeparation.vert.glsl");
+    const GLchar* fShaderSource = loadFile("./shaders/bh_spaceSeparation.frag.glsl");
+    glShaderSource(BH_spaceSeparationVertexShader, 1, &vShaderSource, NULL);
+    glShaderSource(BH_spaceSeparationFragmentShader, 1, &fShaderSource, NULL);
+    delete [] vShaderSource;
+    delete [] fShaderSource;
+    glCompileShader(BH_spaceSeparationVertexShader);
+    glCompileShader(BH_spaceSeparationFragmentShader);
+    BH_spaceSeparationShaderProgram = glCreateProgram();
+    glAttachShader(BH_spaceSeparationShaderProgram, BH_spaceSeparationVertexShader);
+    glAttachShader(BH_spaceSeparationShaderProgram, BH_spaceSeparationFragmentShader);
+    glLinkProgram(BH_spaceSeparationShaderProgram);
 }
 
 void GPU_BarnesHut_Simulation::render()
@@ -86,22 +110,70 @@ void GPU_BarnesHut_Simulation::render()
     glm::mat4 PV = Projection * glm::lookAt(AbstractSimulation::centerOfMass + sphericalToCartesian(AbstractSimulation::cameraPos),
                                             AbstractSimulation::centerOfMass,
                                             AbstractSimulation::upVector);
-    glUseProgram(bodiesShaderProgram);
 
-	GLint PVM = glGetUniformLocation(bodiesShaderProgram, "PVM");
-	glUniformMatrix4fv(PVM, 1, GL_FALSE, glm::value_ptr(PV));
+    {
+        glUseProgram(BH_spaceSeparationShaderProgram);
+        GLint PVM = glGetUniformLocation(BH_spaceSeparationShaderProgram, "PVM");
+    	glUniformMatrix4fv(PVM, 1, GL_FALSE, glm::value_ptr(PV));
 
-    glBindBuffer(GL_ARRAY_BUFFER, posBodiesBuffer);
-    GLuint pos = glGetAttribLocation(bodiesShaderProgram, "pos");
-    glVertexAttribPointer(pos, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glEnableVertexAttribArray(pos);
+        glBindBuffer(GL_ARRAY_BUFFER, linesBuffer);
+        updateLines();
+        glBufferData(GL_ARRAY_BUFFER, 2*AbstractSimulation::N*sizeof(glm::vec3), bh_lines, GL_DYNAMIC_DRAW);
+        GLuint pos = glGetAttribLocation(BH_spaceSeparationShaderProgram, "pos");
+        glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    	glEnableVertexAttribArray(pos);
 
-    glPointSize(4);
-    glDrawArrays(GL_POINTS, 0,AbstractSimulation::N);
+        glDrawArrays(GL_LINES, 0, 2*AbstractSimulation::N);
+    }
+
+
+
+    {
+        glUseProgram(bodiesShaderProgram);
+
+    	GLint PVM = glGetUniformLocation(bodiesShaderProgram, "PVM");
+    	glUniformMatrix4fv(PVM, 1, GL_FALSE, glm::value_ptr(PV));
+
+        glBindBuffer(GL_ARRAY_BUFFER, posBodiesBuffer);
+        GLuint pos = glGetAttribLocation(bodiesShaderProgram, "pos");
+        glVertexAttribPointer(pos, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    	glEnableVertexAttribArray(pos);
+
+        glPointSize(4);
+        glDrawArrays(GL_POINTS, 0, AbstractSimulation::N);
+    }
+
     glFlush();
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     glUseProgram(0);
+}
+
+void GPU_BarnesHut_Simulation::updateLines()
+{
+    checkCudaErrors(cudaMemcpy(cpu_l, dev_l, AbstractSimulation::N * sizeof(float), cudaMemcpyDeviceToHost ));
+    checkCudaErrors(cudaMemcpy(cpu_pivots, dev_pivots, AbstractSimulation::N * sizeof(glm::vec3), cudaMemcpyDeviceToHost ));
+    for(int i = AbstractSimulation::N-1, j = 0; i > 0; --i, j+=2)
+    {
+        if(j == 0) {
+            glm::vec3 ul(0.0,cpu_pivots[i].y+cpu_l[i],cpu_pivots[i].z);
+            glm::vec3 ur(0.0,cpu_pivots[i].y+cpu_l[i],cpu_pivots[i].z+cpu_l[i]);
+            glm::vec3 bl(0.0,cpu_pivots[i].y,cpu_pivots[i].z);
+            glm::vec3 br(0.0,cpu_pivots[i].y,cpu_pivots[i].z+cpu_l[i]);
+            bh_lines[j+0] = ul; bh_lines[j+1] = ur;
+            bh_lines[j+2] = ur; bh_lines[j+3] = br;
+            bh_lines[j+4] = br; bh_lines[j+5] = bl;
+            bh_lines[j+6] = bl; bh_lines[j+7] = ul;
+            j += 8;
+
+        }
+        glm::vec3 l(0.0,cpu_pivots[i].y+cpu_l[i]/2.0f,cpu_pivots[i].z);
+        glm::vec3 r(0.0,cpu_pivots[i].y+cpu_l[i]/2.0f,cpu_pivots[i].z+cpu_l[i]);
+        glm::vec3 u(0.0,cpu_pivots[i].y+cpu_l[i],cpu_pivots[i].z+cpu_l[i]/2.0f);
+        glm::vec3 d(0.0,cpu_pivots[i].y,cpu_pivots[i].z+cpu_l[i]+cpu_l[i]/2.0f);
+        bh_lines[j+0] = l; bh_lines[j+1] = r;
+        bh_lines[j+0] = u; bh_lines[j+1] = d;
+    }
 }
